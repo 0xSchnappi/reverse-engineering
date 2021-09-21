@@ -1,34 +1,36 @@
-# coding=<encoding UTF-8>
+from unicorn import *
+from unicorn.x86_const import *
 
-from unicorn import *   # unicorn base constant
-from unicorn.x86_const import * # special x86 and x64 cons
-#from pwn import *
+
 import struct
 
-
 def read(name):
-    '''
-
-    '''
-    #with open(name, encoding='utf-8') as f:
-    with open(name, 'rb') as f:
+    with open(name) as f:
         return f.read()
-
+        
 def u32(data):
-    '''
-    return 4 BYTE string to integer (little)
-    '''
     return struct.unpack("I", data)[0]
-
+    
 def p32(num):
-    '''
-    return integer to 4 BYTE string (little)
-    You can install pwntools
-    from pwd import *
-    '''
     return struct.pack("I", num)
 
+
+mu = Uc (UC_ARCH_X86, UC_MODE_64)
+
+
+BASE = 0x400000
+STACK_ADDR = 0x0
+STACK_SIZE = 1024*1024
+
+mu.mem_map(BASE, 1024*1024)
+mu.mem_map(STACK_ADDR, STACK_SIZE)
+
+
+mu.mem_write(BASE, read("./fibonacci"))
+mu.reg_write(UC_X86_REG_RSP, STACK_ADDR + STACK_SIZE - 1)
+
 instructions_skip_list = [0x00000000004004EF, 0x00000000004004F6, 0x0000000000400502, 0x000000000040054F]
+
 FIBONACCI_ENTRY = 0x0000000000400670
 FIBONACCI_END = [0x00000000004006F1, 0x0000000000400709]
 
@@ -41,7 +43,7 @@ def hook_code(mu, address, size, user_data):
     if address in instructions_skip_list:
         mu.reg_write(UC_X86_REG_RIP, address+size)
     
-    elif address == 0x0000000000400560:                       # That instruction writes a byte of the flag
+    elif address == 0x400560:                       # That instruction writes a byte of the flag
         c = mu.reg_read(UC_X86_REG_RDI)
         print(chr(c))
         mu.reg_write(UC_X86_REG_RIP, address+size)
@@ -68,32 +70,7 @@ def hook_code(mu, address, size, user_data):
         d[(arg0, arg1)]=(ret_rax, ret_ref)          # Remember the return values for this argument pair
 
 
-mu = Uc(UC_ARCH_X86, UC_MODE_64) # inital unicorn engine 
-'''
-parameter 1 Architecture type
-parameter 2 Architecture detail
-'''
-
-BASE = 0x400000
-STACK_ADDR = 0x0
-STACK_SIZE = 1024*1024
-
-mu.mem_map(BASE, 1024*1024)
-mu.mem_map(STACK_ADDR, STACK_SIZE)
-'''
-Image of base 0x400000
-stack start 0x0
-stack size 1024*1024
-'''
-
-mu.mem_write(BASE, read("./fibonacci"))
-mu.reg_write(UC_X86_REG_RSP, STACK_ADDR + STACK_SIZE -1)
-'''
-need set rsp pointer bottom
-'''
-
-'''
-now, you can start
-'''
 mu.hook_add(UC_HOOK_CODE, hook_code)
-mu.emu_start(0x00000000004004E0,0x0000000000400575)
+
+
+mu.emu_start(0x00000000004004E0, 0x0000000000400575)
