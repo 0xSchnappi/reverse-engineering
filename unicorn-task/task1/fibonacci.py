@@ -1,8 +1,8 @@
 # coding=<encoding UTF-8>
 
 from unicorn import *   # unicorn base constant
-from unicorn.x86_const import * # special x86 and x64 cons
-#from pwn import *
+from unicorn.x86_const import * # special x86 and x64 constant
+from pwn import *   
 import struct
 
 
@@ -14,19 +14,19 @@ def read(name):
     with open(name, 'rb') as f:
         return f.read()
 
-def u32(data):
+#def u32(data):
     '''
     return 4 BYTE string to integer (little)
     '''
-    return struct.unpack("I", data)[0]
+    #return struct.unpack("I", data)[0]
 
-def p32(num):
+#def p32(num):
     '''
     return integer to 4 BYTE string (little)
     You can install pwntools
-    from pwd import *
+    from pwn import *
     '''
-    return struct.pack("I", num)
+    #return struct.pack("I", num)
 
 instructions_skip_list = [0x00000000004004EF, 0x00000000004004F6, 0x0000000000400502, 0x000000000040054F]
 FIBONACCI_ENTRY = 0x0000000000400670
